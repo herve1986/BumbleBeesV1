@@ -142,7 +142,7 @@ function Navbar() {
         <a href="#hero" className="flex items-center gap-3 group">
           <div className="relative">
             <img
-              src="/manus-storage/bumblebees-logo_d831191e.jpg"
+              src="/public/images/logo.jpg"
               alt="Bumblebees"
               className="h-11 w-11 rounded-full object-cover transition-all duration-300 group-hover:scale-110"
               style={{ border: "2px solid #e8a820", boxShadow: "0 0 12px rgba(232,168,32,0.3)" }}
@@ -273,14 +273,12 @@ function HeroSection() {
           transition={{ delay: 0.3, duration: 0.6 }}
           className="flex items-center justify-center gap-3 mb-6"
         >
-          <span className="text-[#e8a820]">★</span>
-          <span
-            className="text-[#e8a820]/80 tracking-[0.4em] text-xs uppercase"
-            style={{ fontFamily: "'Special Elite', monospace" }}
-          >
-            Since 2023
-          </span>
-          <span className="text-[#e8a820]">★</span>
+        <span
+          className="text-[#e8a820]/80 tracking-[0.4em] text-xs uppercase"
+          style={{ fontFamily: "'Special Elite', monospace" }}
+        >
+          <span className="text-base">★</span> Since 2023 <span className="text-base">★</span>
+        </span>
         </motion.div>
 
         {/* Logo */}
@@ -290,11 +288,11 @@ function HeroSection() {
           transition={{ delay: 0.5, duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
           className="flex justify-center mb-8"
         >
-          <div className="relative">
+          <div className="mt-5 relative flex items-center justify-center w-40 h-40 md:w-56 md:h-56">
             <img
-              src="/manus-storage/bumblebees-logo_d831191e.jpg"
+              src="/public/images/logo.jpg"
               alt="Bumblebees Logo"
-              className="w-40 h-40 md:w-56 md:h-56 rounded-full object-cover"
+              className="w-full h-full rounded-full object-cover"
               style={{
                 boxShadow: "0 0 60px rgba(232,168,32,0.45), 0 0 120px rgba(232,168,32,0.15)",
                 border: "2px solid rgba(232,168,32,0.6)",
@@ -302,14 +300,14 @@ function HeroSection() {
             />
             {/* Hex frame around logo */}
             <svg
-              className="absolute -inset-4 w-[calc(100%+32px)] h-[calc(100%+32px)] pointer-events-none"
+              className="absolute top-1/2 left-1/2 w-[130%] h-[130%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
               viewBox="0 0 200 200"
               xmlns="http://www.w3.org/2000/svg"
             >
               <polygon
-                points="100,8 192,55 192,145 100,192 8,145 8,55"
+                points="100,5 195,52.5 195,147.5 100,195 5,147.5 5,52.5"
                 fill="none"
-                stroke="rgba(232,168,32,0.25)"
+                stroke="rgba(232,168,32,0.35)"
                 strokeWidth="1.5"
                 strokeDasharray="8 4"
               />
@@ -328,7 +326,7 @@ function HeroSection() {
           }}
         >
           {title.slice(0, charIndex)}
-          <span className="animate-pulse text-[#c0392b]">|</span>
+          <span className="animate-pulse text-[#c0392b] relative -top-1">|</span>
         </h1>
 
         {/* Subtitle */}
@@ -401,23 +399,6 @@ function HeroSection() {
           </a>
         </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.5, duration: 1 }}
-      >
-        <span className="text-[#e8a820]/50 text-xs tracking-widest uppercase" style={{ fontFamily: "'Oswald', sans-serif" }}>
-          Scroll
-        </span>
-        <motion.div
-          className="w-0.5 h-8 bg-gradient-to-b from-[#e8a820]/60 to-transparent"
-          animate={{ scaleY: [1, 0.3, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-      </motion.div>
 
       {/* Bottom diagonal cut */}
       <div
@@ -1198,7 +1179,7 @@ function Footer() {
           <div className="flex items-center gap-5">
             <div className="relative">
               <img
-                src="/manus-storage/bumblebees-logo_d831191e.jpg"
+                src="/public/images/logo.jpg"
                 alt="Bumblebees"
                 className="w-14 h-14 rounded-full object-cover"
                 style={{ border: "2px solid rgba(232,168,32,0.4)", boxShadow: "0 0 20px rgba(232,168,32,0.15)" }}
