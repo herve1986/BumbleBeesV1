@@ -756,21 +756,6 @@ function SetlistSection() {
     >
       <HexPattern opacity={0.06} id="hex-setlist" />
       <GrungeOverlay opacity={0.025} />
-
-      {/* Oversized background text */}
-      <div
-        className="absolute right-0 bottom-0 pointer-events-none select-none"
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "clamp(6rem, 18vw, 16rem)",
-          fontWeight: 900,
-          color: "rgba(232,168,32,0.03)",
-          lineHeight: 1,
-        }}
-      >
-        LEGENDS
-      </div>
-
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Offset header */}
         <FadeIn direction="left" className="mb-16">
