@@ -4,19 +4,19 @@ import GrungeOverlay from "@/components/ui/GrungeOverlay";
 
 const images = [
   {
-    src: "/manus-storage/hero-bg_42cf8845.jpg",
+    src: "public/images/img1.jpg",
     alt: "Concert Bumblebees",
   },
   {
-    src: "/manus-storage/guitar-smoke_214b3f3a.jpg",
+    src: "public/images/img2.jpg",
     alt: "Guitare en action",
   },
   {
-    src: "/manus-storage/concert-crowd_5f8ad508.jpg",
+    src: "public/images/img3.jpg",
     alt: "Le public en feu",
   },
   {
-    src: "/manus-storage/band-texture_97e6cfce.jpg",
+    src: "public/images/img4.jpg",
     alt: "Ambiance rock",
   },
 ];
@@ -75,7 +75,7 @@ export default function GallerySection() {
                   src={img.src}
                   alt={img.alt}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
                 />
 
                 {/* Dark gradient on hover */}
