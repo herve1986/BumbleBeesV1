@@ -58,7 +58,7 @@ export default function HeroSection() {
               className="flex items-center justify-center gap-3 mb-6"
             >
             <span
-              className="text-[#e8a820]/80 tracking-[0.4em] text-xs uppercase"
+              className="text-[#e8a820]/80 tracking-[0.4em] text-s uppercase"
               style={{ fontFamily: "'Special Elite', monospace" }}
             >
               <span className="text-base">★</span> Since 2023 <span className="text-base">★</span>

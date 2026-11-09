@@ -44,7 +44,7 @@ export default function Navbar() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-20">
+     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16 md:h-20 relative">
         {/* Logo */}
         <a href="#hero" className="flex items-center gap-3 group">
           <div className="relative">
@@ -74,7 +74,7 @@ export default function Navbar() {
               className="text-[#f5f0e8]/40 leading-none mt-0.5"
               style={{
                 fontFamily: "'Special Elite', monospace",
-                fontSize: "0.6rem",
+                fontSize: "0.7rem",
                 letterSpacing: "0.25em",
               }}
             >
@@ -84,12 +84,12 @@ export default function Navbar() {
         </a>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="relative text-[#f5f0e8]/70 hover:text-[#e8a820] transition-colors duration-200 text-xs tracking-widest uppercase group"
+              className="relative text-[#f5f0e8]/70 hover:text-[#e8a820] transition-colors duration-200 text-s tracking-widest uppercase group"
               style={{
                 fontFamily: "'Oswald', sans-serif",
                 fontWeight: 500,
@@ -101,6 +101,16 @@ export default function Navbar() {
             </a>
           ))}
         </nav>
+
+        <a
+          href="/admin"
+          className="hidden md:flex relative items-center ml-auto text-[#f5f0e8]/70 hover:text-[#e8a820] transition-colors duration-200 text-s tracking-widest uppercase group"
+          style={{fontFamily: "'Oswald', sans-serif",fontWeight: 500,}}
+        >
+          ADMIN
+          <span className="absolute -bottom-1 left-0 w-0 h-px
+          bg-[#e8a820] group-hover:w-full transition-all duration-300"/>
+        </a>
 
         {/* Mobile hamburger */}
         <button
