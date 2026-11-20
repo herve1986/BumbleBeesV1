@@ -1,10 +1,24 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
 
-// ─── Navigation ──────────────────────────────────────────────────────────────
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [location, setLocation] = useLocation();
+
+  const navigateToSection = (href: string) => {
+    setMenuOpen(false);
+
+    if (location !== "/") {
+      setLocation("/" + href);
+    } else {
+      document.querySelector(href)?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -44,9 +58,19 @@ export default function Navbar() {
         }}
       />
 
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16 md:h-20 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16 md:h-20 relative">
+
         {/* Logo */}
-        <a href="#hero" className="flex items-center gap-3 group">
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            setLocation("/");
+            setMenuOpen(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="flex items-center gap-3 group"
+        >
           <div className="relative">
             <img
               src="/images/logo.jpg"
@@ -71,7 +95,7 @@ export default function Navbar() {
             </div>
 
             <div
-              className="text-[#f5f0e8]/40 leading-none mt-0.5"
+              className="text-[#f5f0e8]/40 leading-none mt-0.5 pt-1"
               style={{
                 fontFamily: "'Special Elite', monospace",
                 fontSize: "0.7rem",
@@ -88,7 +112,11 @@ export default function Navbar() {
           {links.map((l) => (
             <a
               key={l.href}
-              href={l.href}
+              href={location === "/" ? l.href : `/${l.href}`}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToSection(l.href);
+              }}
               className="relative text-[#f5f0e8]/70 hover:text-[#e8a820] transition-colors duration-200 text-s tracking-widest uppercase group"
               style={{
                 fontFamily: "'Oswald', sans-serif",
@@ -102,14 +130,17 @@ export default function Navbar() {
           ))}
         </nav>
 
+        {/* Admin */}
         <a
           href="/admin"
           className="hidden md:flex relative items-center ml-auto text-[#f5f0e8]/70 hover:text-[#e8a820] transition-colors duration-200 text-s tracking-widest uppercase group"
-          style={{fontFamily: "'Oswald', sans-serif",fontWeight: 500,}}
+          style={{
+            fontFamily: "'Oswald', sans-serif",
+            fontWeight: 500,
+          }}
         >
           ADMIN
-          <span className="absolute -bottom-1 left-0 w-0 h-px
-          bg-[#e8a820] group-hover:w-full transition-all duration-300"/>
+          <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#e8a820] group-hover:w-full transition-all duration-300" />
         </a>
 
         {/* Mobile hamburger */}
@@ -157,8 +188,11 @@ export default function Navbar() {
               {links.map((l, i) => (
                 <a
                   key={l.href}
-                  href={l.href}
-                  onClick={() => setMenuOpen(false)}
+                  href={location === "/" ? l.href : `/${l.href}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateToSection(l.href);
+                  }}
                   className="text-[#f5f0e8] hover:text-[#e8a820] hover:pl-4 transition-all text-lg tracking-widest uppercase py-3 border-b border-[#e8a820]/10"
                   style={{
                     fontFamily: "'Oswald', sans-serif",
@@ -171,6 +205,15 @@ export default function Navbar() {
                   {l.label}
                 </a>
               ))}
+              
+              <a
+                href="/admin"
+                onClick={() => setMenuOpen(false)}
+                className="text-[#f5f0e8] hover:text-[#e8a820] text-lg tracking-widest uppercase py-3"
+                style={{ fontFamily: "'Oswald', sans-serif" }}
+              >
+                ADMIN
+              </a>
             </nav>
           </motion.div>
         )}
