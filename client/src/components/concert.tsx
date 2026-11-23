@@ -1,46 +1,52 @@
-import FadeIn from "@/components/ui/FadeIn";
-import HexPattern from "@/components/ui/HexPattern";
-import GrungeOverlay from "@/components/ui/GrungeOverlay";
+import { useEffect, useState } from "react";
+import FadeIn from "@/components/ui/FadeIn"; // Ajoute une animation d'apparition
+import HexPattern from "@/components/ui/HexPattern"; // Affiche un motif hexagonal en arrière-plan
+import GrungeOverlay from "@/components/ui/GrungeOverlay"; // Ajoute une texture vieillie / grunge
 
-const concerts = [
-  {
-    date: "15 Août 2026",
-    venue: "Le Café de la Plage",
-    city: "Marseille",
-    time: "21h00",
-    type: "Concert",
-  },
-  {
-    date: "22 Août 2026",
-    venue: "Rock en Scène",
-    city: "Lyon",
-    time: "20h30",
-    type: "Festival",
-  },
-  {
-    date: "5 Septembre 2026",
-    venue: "La Cigale",
-    city: "Paris",
-    time: "21h30",
-    type: "Concert",
-  },
-  {
-    date: "19 Septembre 2026",
-    venue: "Le Bikini",
-    city: "Toulouse",
-    time: "20h00",
-    type: "Concert",
-  },
-  {
-    date: "3 Octobre 2026",
-    venue: "Stereolux",
-    city: "Nantes",
-    time: "21h00",
-    type: "Concert",
-  },
-];
+interface Concert {
+  id: number;
+  address: string;
+  city: string;
+  date_concert: string;
+  time_concert: string;
+}
 
 export default function ConcertsSection() {
+
+  const [concerts, setConcerts] = useState<Concert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+  const fetchConcerts = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/concerts/");
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération des concerts");
+      }
+
+      const data = await response.json();
+
+      setConcerts(data);
+
+    } catch (err) {
+      console.error(err);
+
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Une erreur inconnue est survenue");
+      }
+
+    } finally {
+      setLoading(false);
+    }
+    };
+
+    fetchConcerts();
+  }, []);
+
   return (
     <section
       id="concerts"
@@ -106,7 +112,7 @@ export default function ConcertsSection() {
         {/* Concert list */}
         <div className="space-y-2">
           {concerts.map((concert, i) => (
-            <FadeIn key={`${concert.date}-${concert.venue}`} delay={i * 0.07}>
+            <FadeIn key={concert.id} delay={i * 0.07}>
               <div
                 className="group flex flex-col sm:flex-row sm:items-center gap-4 p-5 relative overflow-hidden transition-all duration-300 cursor-pointer"
                 style={{
@@ -148,14 +154,18 @@ export default function ConcertsSection() {
                     className="text-[#e8a820] font-bold text-base"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                   >
-                    {concert.date}
+                    {new Date(concert.date_concert).toLocaleDateString("fr-BE", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </div>
 
                   <div
                     className="text-[#f5f0e8]/40 text-xs tracking-widest uppercase"
                     style={{ fontFamily: "'Oswald', sans-serif" }}
                   >
-                    {concert.time}
+                    {concert.time_concert.slice(0, 5)}
                   </div>
                 </div>
 
@@ -170,7 +180,7 @@ export default function ConcertsSection() {
                       fontWeight: 600,
                     }}
                   >
-                    {concert.venue}
+                    {concert.address}
                   </div>
 
                   <div
@@ -189,24 +199,12 @@ export default function ConcertsSection() {
                   className="flex-shrink-0 px-3 py-1 text-xs tracking-widest uppercase"
                   style={{
                     fontFamily: "'Oswald', sans-serif",
-                    background:
-                      concert.type === "Festival"
-                        ? "rgba(192,57,43,0.25)"
-                        : "rgba(232,168,32,0.12)",
-                    color:
-                      concert.type === "Festival" ? "#e8756a" : "#e8a820",
-                    border: `1px solid ${
-                      concert.type === "Festival"
-                        ? "rgba(192,57,43,0.5)"
-                        : "rgba(232,168,32,0.3)"
-                    }`,
+                    background: "rgba(232,168,32,0.12)",
+                    color: "#e8a820",
+                    border: "1px solid rgba(232,168,32,0.3)",
                   }}
                 >
-                  {concert.type}
-                </div>
-
-                <div className="flex-shrink-0 text-[#e8a820]/30 group-hover:text-[#e8a820] transition-colors text-xl">
-                  →
+                  Concert
                 </div>
               </div>
             </FadeIn>
@@ -216,7 +214,7 @@ export default function ConcertsSection() {
         {/* Social media reminder */}
         <FadeIn delay={0.5} className="text-right mt-10">
           <p
-            className="text-[#f5f0e8]/30 text-xs tracking-widest"
+            className="text-[#f5f0e8]/30 text-ms tracking-widest"
             style={{ fontFamily: "'Special Elite', monospace" }}
           >
             ★ Toutes les dates sur nos réseaux sociaux ★

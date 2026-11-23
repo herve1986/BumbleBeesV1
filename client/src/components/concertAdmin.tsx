@@ -1,84 +1,198 @@
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Save, ExternalLink, CalendarDays, MapPin } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Save,
+  CalendarDays,
+  MapPin,
+  Clock,
+} from "lucide-react";
+
+const API_URL = "http://127.0.0.1:8000";
 
 interface Concert {
   id: number;
-  date: string;
-  address: string;
-  link: string;
+  address: string | null;
+  city: string;
+  date_concert: string | null;
+  time_concert: string | null;
 }
 
 export default function ConcertAdmin() {
   const [concerts, setConcerts] = useState<Concert[]>([]);
-
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [address, setAddress] = useState("");
-  const [link, setLink] = useState("");
+  const [city, setCity] = useState("");
+
+  // Récupérer les concerts depuis FastAPI
+  const fetchConcerts = async () => {
+    try {
+      setError(null);
+
+      const response = await fetch(`${API_URL}/concerts/`);
+
+      if (!response.ok) {
+        throw new Error("Impossible de récupérer les concerts.");
+      }
+
+      const data: Concert[] = await response.json();
+      setConcerts(data);
+
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConcerts();
+  }, []);
 
   // Réinitialiser le formulaire
   const resetForm = () => {
     setDate("");
+    setTime("");
     setAddress("");
-    setLink("");
+    setCity("");
     setEditingId(null);
     setFormOpen(false);
   };
 
   // Ajouter ou modifier un concert
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!date || !address.trim()) {
+    if (!city.trim()) {
+      setError("La ville est obligatoire.");
       return;
     }
 
-    if (editingId !== null) {
-      setConcerts((prev) =>
-        prev.map((concert) =>
-          concert.id === editingId
-            ? { ...concert, date, address, link }
-            : concert
-        )
+    const concertData = {
+      address: address.trim() || null,
+      city: city.trim(),
+      date_concert: date || null,
+      time_concert: time || null,
+    };
+
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      const isEditing = editingId !== null;
+
+      const url = isEditing
+        ? `${API_URL}/concerts/${editingId}`
+        : `${API_URL}/concerts/`;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(concertData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.detail || "Erreur lors de l'enregistrement."
+        );
+      }
+
+      await response.json();
+
+      setSuccess(
+        isEditing
+          ? "Concert modifié avec succès !"
+          : "Concert ajouté avec succès !"
       );
-    } else {
-      const newConcert: Concert = {
-        id: Date.now(),
-        date,
-        address: address.trim(),
-        link: link.trim(),
-      };
 
-      setConcerts((prev) => [...prev, newConcert]);
+      resetForm();
+      await fetchConcerts();
+
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setSaving(false);
     }
-
-    resetForm();
   };
 
   // Préparer la modification
   const handleEdit = (concert: Concert) => {
     setEditingId(concert.id);
-    setDate(concert.date);
-    setAddress(concert.address);
-    setLink(concert.link);
+    setDate(concert.date_concert || "");
+    setTime(concert.time_concert?.slice(0, 5) || "");
+    setAddress(concert.address || "");
+    setCity(concert.city);
+    setError(null);
+    setSuccess(null);
     setFormOpen(true);
   };
 
   // Supprimer un concert
-  const handleDelete = (id: number) => {
-    if (window.confirm("Voulez-vous vraiment supprimer ce concert ?")) {
-      setConcerts((prev) =>
-        prev.filter((concert) => concert.id !== id)
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce concert ?")) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(`${API_URL}/concerts/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.detail || "Erreur lors de la suppression."
+        );
+      }
+
+      setSuccess("Concert supprimé avec succès !");
+
+      await fetchConcerts();
+
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
       );
     }
   };
 
-  // Affichage de la date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString + "T12:00:00").toLocaleDateString(
+  // Formater la date
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Date à définir";
+
+    const [year, month, day] = dateString.split("-").map(Number);
+
+    return new Date(year, month - 1, day).toLocaleDateString(
       "fr-FR",
       {
         day: "numeric",
@@ -86,6 +200,12 @@ export default function ConcertAdmin() {
         year: "numeric",
       }
     );
+  };
+
+  // Formater l'heure
+  const formatTime = (timeString: string | null) => {
+    if (!timeString) return "Heure à définir";
+    return timeString.slice(0, 5);
   };
 
   return (
@@ -101,7 +221,7 @@ export default function ConcertAdmin() {
             Gestion des concerts
           </h2>
 
-          <p className="text-m text-[#f5f0e8]/50 mt-1">
+          <p className="text-sm text-[#f5f0e8]/50 mt-1">
             Gérez les dates et lieux de vos prochains concerts.
           </p>
         </div>
@@ -109,6 +229,8 @@ export default function ConcertAdmin() {
         <button
           onClick={() => {
             resetForm();
+            setError(null);
+            setSuccess(null);
             setFormOpen(true);
           }}
           className="flex items-center gap-2 px-5 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase tracking-wider text-sm hover:bg-[#f5c04e] transition-colors"
@@ -118,6 +240,19 @@ export default function ConcertAdmin() {
           Ajouter un concert
         </button>
       </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="p-4 border border-red-500/30 bg-red-500/10 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 border border-green-500/30 bg-green-500/10 text-green-400">
+          {success}
+        </div>
+      )}
 
       {/* Formulaire */}
       {formOpen && (
@@ -144,14 +279,27 @@ export default function ConcertAdmin() {
             {/* Date */}
             <div>
               <label className="block text-sm mb-2 text-[#f5f0e8]/70">
-                Date du concert *
+                Date du concert
               </label>
 
               <input
                 type="date"
-                required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-[#111] border border-[#e8a820]/20 p-3 text-[#f5f0e8] focus:border-[#e8a820] outline-none"
+              />
+            </div>
+
+            {/* Heure */}
+            <div>
+              <label className="block text-sm mb-2 text-[#f5f0e8]/70">
+                Heure du concert
+              </label>
+
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 className="w-full bg-[#111] border border-[#e8a820]/20 p-3 text-[#f5f0e8] focus:border-[#e8a820] outline-none"
               />
             </div>
@@ -159,47 +307,48 @@ export default function ConcertAdmin() {
             {/* Adresse */}
             <div>
               <label className="block text-sm mb-2 text-[#f5f0e8]/70">
-                Adresse du concert *
+                Adresse du concert
+              </label>
+
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Ex : Place de la Gare, 1"
+                className="w-full bg-[#111] border border-[#e8a820]/20 p-3 text-[#f5f0e8] placeholder:text-[#f5f0e8]/25 focus:border-[#e8a820] outline-none"
+              />
+            </div>
+
+            {/* Ville */}
+            <div>
+              <label className="block text-sm mb-2 text-[#f5f0e8]/70">
+                Ville *
               </label>
 
               <input
                 type="text"
                 required
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Ex : Le Café de la Plage, Marseille"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Ex : Namur"
                 className="w-full bg-[#111] border border-[#e8a820]/20 p-3 text-[#f5f0e8] placeholder:text-[#f5f0e8]/25 focus:border-[#e8a820] outline-none"
               />
-            </div>
-
-            {/* Lien facultatif */}
-            <div>
-              <label className="block text-sm mb-2 text-[#f5f0e8]/70">
-                Lien externe (facultatif)
-              </label>
-
-              <input
-                type="url"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-[#111] border border-[#e8a820]/20 p-3 text-[#f5f0e8] placeholder:text-[#f5f0e8]/25 focus:border-[#e8a820] outline-none"
-              />
-
-              <p className="text-xs text-[#f5f0e8]/35 mt-2">
-                Billetterie, événement Facebook, site internet...
-              </p>
             </div>
 
             {/* Actions */}
             <div className="flex flex-wrap gap-3 pt-3">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase text-sm hover:bg-[#f5c04e]"
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase text-sm hover:bg-[#f5c04e] disabled:opacity-50"
                 style={{ fontFamily: "'Oswald', sans-serif" }}
               >
                 <Save size={17} />
-                {editingId !== null ? "Enregistrer" : "Ajouter"}
+                {saving
+                  ? "Enregistrement..."
+                  : editingId !== null
+                    ? "Enregistrer"
+                    : "Ajouter"}
               </button>
 
               <button
@@ -228,7 +377,11 @@ export default function ConcertAdmin() {
           </span>
         </div>
 
-        {concerts.length === 0 ? (
+        {loading ? (
+          <p className="text-center py-10 text-[#e8a820]">
+            Chargement des concerts...
+          </p>
+        ) : concerts.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-[#e8a820]/20">
             <CalendarDays
               size={36}
@@ -246,7 +399,11 @@ export default function ConcertAdmin() {
         ) : (
           concerts
             .slice()
-            .sort((a, b) => a.date.localeCompare(b.date))
+            .sort((a, b) =>
+              (a.date_concert || "9999-12-31").localeCompare(
+                b.date_concert || "9999-12-31"
+              )
+            )
             .map((concert, index) => (
               <div
                 key={concert.id}
@@ -260,28 +417,29 @@ export default function ConcertAdmin() {
 
                 {/* Informations */}
                 <div className="flex-1 min-w-0 space-y-2">
+
                   <div className="flex items-center gap-2 text-[#e8a820]">
                     <CalendarDays size={16} />
                     <span className="font-bold">
-                      {formatDate(concert.date)}
+                      {formatDate(concert.date_concert)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2 text-[#f5f0e8]/60 text-sm">
-                    <MapPin size={16} />
-                    <span>{concert.address}</span>
+                    <Clock size={16} />
+                    <span>{formatTime(concert.time_concert)}</span>
                   </div>
 
-                  {concert.link && (
-                    <a
-                      href={concert.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-xs text-[#e8a820] hover:underline"
-                    >
-                      Voir le lien <ExternalLink size={13} />
-                    </a>
+                  {concert.address && (
+                    <div className="flex items-center gap-2 text-[#f5f0e8]/60 text-sm">
+                      <MapPin size={16} />
+                      <span>{concert.address}</span>
+                    </div>
                   )}
+
+                  <div className="text-sm text-[#f5f0e8]/80">
+                    {concert.city}
+                  </div>
                 </div>
 
                 {/* Actions */}

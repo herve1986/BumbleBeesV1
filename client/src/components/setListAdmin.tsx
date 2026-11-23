@@ -1,10 +1,23 @@
 
-import { useState, type FormEvent } from "react";
-import {Plus,Pencil,Trash2,X,Save,Music,Disc3,ChevronDown,ChevronUp,} from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Save,
+  Music,
+  Disc3,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+
+const API_URL = "http://127.0.0.1:8000";
 
 interface Song {
   id: number;
   title: string;
+  group_id: number;
 }
 
 interface Artist {
@@ -13,10 +26,21 @@ interface Artist {
   songs: Song[];
 }
 
+interface GroupResponse {
+  id: number;
+  name: string;
+}
+
 export default function SetlistAdmin() {
   const [artists, setArtists] = useState<Artist[]>([]);
 
-  // Formulaire groupe / artiste
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Formulaire groupe
   const [groupFormOpen, setGroupFormOpen] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [groupName, setGroupName] = useState("");
@@ -26,153 +50,412 @@ export default function SetlistAdmin() {
   const [editingSongId, setEditingSongId] = useState<number | null>(null);
   const [songTitle, setSongTitle] = useState("");
 
-  // Groupes ouverts / fermés
+  // Groupes ouverts
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
+
+  // Chargement des groupes
+  const fetchGroups = async () => {
+    try {
+      setError(null);
+
+      const response = await fetch(`${API_URL}/groups/`);
+
+      if (!response.ok) {
+        throw new Error("Impossible de récupérer les groupes.");
+      }
+
+      const data: GroupResponse[] = await response.json();
+
+      setArtists((previousArtists) =>
+        data.map((group) => {
+          const existingArtist = previousArtists.find(
+            (artist) => artist.id === group.id
+          );
+
+          return {
+            id: group.id,
+            name: group.name,
+            songs: existingArtist?.songs ?? [],
+          };
+        })
+      );
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chargement des morceaux d'un groupe
+  const fetchSongs = async (groupId: number) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/musics/group/${groupId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Impossible de récupérer les morceaux.");
+      }
+
+      const data: Song[] = await response.json();
+
+      setArtists((previousArtists) =>
+        previousArtists.map((artist) =>
+          artist.id === groupId
+            ? { ...artist, songs: data }
+            : artist
+        )
+      );
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors du chargement des morceaux."
+      );
+    }
+  };
+
+  // Chargement initial
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
   // Tri alphabétique
   const sortedArtists = [...artists].sort((a, b) =>
-    a.name.localeCompare(b.name, "fr", { sensitivity: "base" })
+    a.name.localeCompare(b.name, "fr", {
+      sensitivity: "base",
+    })
   );
 
   const sortSongs = (songs: Song[]) =>
     [...songs].sort((a, b) =>
-      a.title.localeCompare(b.title, "fr", { sensitivity: "base" })
+      a.title.localeCompare(b.title, "fr", {
+        sensitivity: "base",
+      })
     );
 
-  // Réinitialiser le formulaire groupe
+  // Réinitialiser formulaire groupe
   const resetGroupForm = () => {
     setGroupName("");
     setEditingGroupId(null);
     setGroupFormOpen(false);
   };
 
+  // Réinitialiser formulaire morceau
+  const resetSongForm = () => {
+    setSongTitle("");
+    setSongFormGroupId(null);
+    setEditingSongId(null);
+  };
+
   // Ajouter ou modifier un groupe
-  const handleGroupSubmit = (e: FormEvent) => {
+  const handleGroupSubmit = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     const name = groupName.trim();
-    if (!name) return;
 
-    if (editingGroupId !== null) {
-      setArtists((prev) =>
-        prev.map((artist) =>
-          artist.id === editingGroupId
-            ? { ...artist, name }
-            : artist
-        )
-      );
-    } else {
-      const newArtist: Artist = {
-        id: Date.now(),
-        name,
-        songs: [],
-      };
-
-      setArtists((prev) => [...prev, newArtist]);
-      setExpandedGroups((prev) => [...prev, newArtist.id]);
+    if (!name) {
+      setError("Le nom du groupe est obligatoire.");
+      return;
     }
 
-    resetGroupForm();
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      const isEditing = editingGroupId !== null;
+
+      const url = isEditing
+        ? `${API_URL}/groups/${editingGroupId}`
+        : `${API_URL}/groups/`;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+            "Erreur lors de l'enregistrement du groupe."
+        );
+      }
+
+      const savedGroup: GroupResponse = await response.json();
+
+      if (isEditing) {
+        setArtists((previousArtists) =>
+          previousArtists.map((artist) =>
+            artist.id === savedGroup.id
+              ? { ...artist, name: savedGroup.name }
+              : artist
+          )
+        );
+
+        setSuccess("Groupe modifié avec succès !");
+      } else {
+        setArtists((previousArtists) => [
+          ...previousArtists,
+          {
+            id: savedGroup.id,
+            name: savedGroup.name,
+            songs: [],
+          },
+        ]);
+
+        setExpandedGroups((previousGroups) => [
+          ...previousGroups,
+          savedGroup.id,
+        ]);
+
+        setSuccess("Groupe ajouté avec succès !");
+      }
+
+      resetGroupForm();
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Préparer la modification d'un groupe
+  // Modifier un groupe
   const handleEditGroup = (artist: Artist) => {
     setGroupName(artist.name);
     setEditingGroupId(artist.id);
+    setError(null);
+    setSuccess(null);
     setGroupFormOpen(true);
   };
 
   // Supprimer un groupe
-  const handleDeleteGroup = (id: number) => {
+  const handleDeleteGroup = async (id: number) => {
     const artist = artists.find((a) => a.id === id);
+
     if (!artist) return;
 
     const message =
       artist.songs.length > 0
-        ? `Supprimer "${artist.name}" et ses ${artist.songs.length} morceau(x) ?`
+        ? `Supprimer "${artist.name}" et ses morceaux ?`
         : `Supprimer "${artist.name}" ?`;
 
-    if (window.confirm(message)) {
-      setArtists((prev) => prev.filter((a) => a.id !== id));
-      setExpandedGroups((prev) => prev.filter((groupId) => groupId !== id));
+    if (!window.confirm(message)) return;
+
+    try {
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(`${API_URL}/groups/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+            "Erreur lors de la suppression du groupe."
+        );
+      }
+
+      setArtists((previousArtists) =>
+        previousArtists.filter((artist) => artist.id !== id)
+      );
+
+      setExpandedGroups((previousGroups) =>
+        previousGroups.filter((groupId) => groupId !== id)
+      );
 
       if (editingGroupId === id) resetGroupForm();
       if (songFormGroupId === id) resetSongForm();
+
+      setSuccess("Groupe supprimé avec succès !");
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
     }
   };
 
-  // Réinitialiser le formulaire morceau
-  function resetSongForm() {
-    setSongTitle("");
-    setSongFormGroupId(null);
-    setEditingSongId(null);
-  }
-
-  // Ajouter ou modifier un morceau
-  const handleSongSubmit = (e: FormEvent) => {
+  // Ajouter ou modifier un morceau dans SQL
+  const handleSongSubmit = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     const title = songTitle.trim();
-    if (!title || songFormGroupId === null) return;
 
-    setArtists((prev) =>
-      prev.map((artist) => {
-        if (artist.id !== songFormGroupId) return artist;
+    if (!title || songFormGroupId === null) {
+      setError("Le titre du morceau est obligatoire.");
+      return;
+    }
 
-        if (editingSongId !== null) {
-          return {
-            ...artist,
-            songs: artist.songs.map((song) =>
-              song.id === editingSongId
-                ? { ...song, title }
-                : song
-            ),
-          };
-        }
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
 
-        return {
-          ...artist,
-          songs: [...artist.songs, { id: Date.now(), title }],
-        };
-      })
-    );
+      const isEditing = editingSongId !== null;
 
-    resetSongForm();
+      const url = isEditing
+        ? `${API_URL}/musics/${editingSongId}`
+        : `${API_URL}/musics/`;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          group_id: songFormGroupId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+            "Erreur lors de l'enregistrement du morceau."
+        );
+      }
+
+      await fetchSongs(songFormGroupId);
+
+      setSuccess(
+        isEditing
+          ? "Morceau modifié avec succès !"
+          : "Morceau ajouté avec succès !"
+      );
+
+      resetSongForm();
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Préparer la modification d'un morceau
+  // Modifier un morceau
   const handleEditSong = (artist: Artist, song: Song) => {
     setSongFormGroupId(artist.id);
     setEditingSongId(song.id);
     setSongTitle(song.title);
+    setError(null);
+    setSuccess(null);
   };
 
-  // Supprimer un morceau
-  const handleDeleteSong = (artistId: number, songId: number) => {
-    if (window.confirm("Supprimer ce morceau ?")) {
-      setArtists((prev) =>
-        prev.map((artist) =>
-          artist.id === artistId
-            ? {
-                ...artist,
-                songs: artist.songs.filter(
-                  (song) => song.id !== songId
-                ),
-              }
-            : artist
-        )
+  // Supprimer un morceau dans SQL
+  const handleDeleteSong = async (
+    artistId: number,
+    songId: number
+  ) => {
+    if (!window.confirm("Supprimer ce morceau ?")) return;
+
+    try {
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(
+        `${API_URL}/musics/${songId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+            "Erreur lors de la suppression du morceau."
+        );
+      }
+
+      await fetchSongs(artistId);
+
+      if (editingSongId === songId) {
+        resetSongForm();
+      }
+
+      setSuccess("Morceau supprimé avec succès !");
+
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
       );
     }
   };
 
   // Ouvrir / fermer un groupe
   const toggleGroup = (id: number) => {
-    setExpandedGroups((prev) =>
-      prev.includes(id)
-        ? prev.filter((groupId) => groupId !== id)
-        : [...prev, id]
-    );
+    const isExpanded = expandedGroups.includes(id);
+
+    if (isExpanded) {
+      setExpandedGroups((previousGroups) =>
+        previousGroups.filter((groupId) => groupId !== id)
+      );
+
+      if (songFormGroupId === id) {
+        resetSongForm();
+      }
+    } else {
+      setExpandedGroups((previousGroups) => [
+        ...previousGroups,
+        id,
+      ]);
+
+      fetchSongs(id);
+    }
   };
+
+  // Nombre total de morceaux
+  const totalSongs = artists.reduce(
+    (total, artist) => total + artist.songs.length,
+    0
+  );
 
   return (
     <div className="text-[#f5f0e8] space-y-8">
@@ -187,7 +470,7 @@ export default function SetlistAdmin() {
             Gestion du répertoire
           </h2>
 
-          <p className="text-m text-[#f5f0e8]/50 mt-1">
+          <p className="text-sm text-[#f5f0e8]/50 mt-1">
             Gérez vos artistes et les morceaux de votre répertoire.
           </p>
         </div>
@@ -195,6 +478,8 @@ export default function SetlistAdmin() {
         <button
           onClick={() => {
             resetGroupForm();
+            setError(null);
+            setSuccess(null);
             setGroupFormOpen(true);
           }}
           className="flex items-center gap-2 px-5 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase tracking-wider text-sm hover:bg-[#f5c04e] transition-colors"
@@ -204,6 +489,19 @@ export default function SetlistAdmin() {
           Ajouter un groupe
         </button>
       </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="p-4 border border-red-500/30 bg-red-500/10 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 border border-green-500/30 bg-green-500/10 text-green-400">
+          {success}
+        </div>
+      )}
 
       {/* Formulaire groupe */}
       {groupFormOpen && (
@@ -245,11 +543,16 @@ export default function SetlistAdmin() {
             <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase text-sm hover:bg-[#f5c04e]"
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-3 bg-[#e8a820] text-[#171717] font-bold uppercase text-sm hover:bg-[#f5c04e] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: "'Oswald', sans-serif" }}
               >
                 <Save size={17} />
-                {editingGroupId !== null ? "Enregistrer" : "Ajouter"}
+                {saving
+                  ? "Enregistrement..."
+                  : editingGroupId !== null
+                    ? "Enregistrer"
+                    : "Ajouter"}
               </button>
 
               <button
@@ -278,7 +581,11 @@ export default function SetlistAdmin() {
           </span>
         </div>
 
-        {artists.length === 0 ? (
+        {loading ? (
+          <p className="text-center py-10 text-[#e8a820]">
+            Chargement des groupes...
+          </p>
+        ) : artists.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-[#e8a820]/20">
             <Disc3
               size={36}
@@ -359,7 +666,7 @@ export default function SetlistAdmin() {
                 {isExpanded && (
                   <div className="border-t border-[#e8a820]/15 p-5 bg-[#191919]">
 
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-4 gap-3">
                       <h4 className="text-xs uppercase tracking-widest text-[#f5f0e8]/50">
                         Répertoire de {artist.name}
                       </h4>
@@ -395,10 +702,15 @@ export default function SetlistAdmin() {
 
                         <button
                           type="submit"
-                          className="flex items-center gap-2 px-5 py-3 bg-[#e8a820] text-[#171717] font-bold text-sm hover:bg-[#f5c04e]"
+                          disabled={saving}
+                          className="flex items-center gap-2 px-5 py-3 bg-[#e8a820] text-[#171717] font-bold text-sm hover:bg-[#f5c04e] disabled:opacity-50"
                         >
                           <Save size={16} />
-                          {editingSongId !== null ? "Enregistrer" : "Ajouter"}
+                          {saving
+                            ? "Enregistrement..."
+                            : editingSongId !== null
+                              ? "Enregistrer"
+                              : "Ajouter"}
                         </button>
 
                         <button
@@ -476,6 +788,7 @@ export default function SetlistAdmin() {
           <p className="text-xs uppercase tracking-widest text-[#f5f0e8]/40">
             Groupes / Artistes
           </p>
+
           <p className="text-2xl font-bold text-[#e8a820]">
             {artists.length}
           </p>
@@ -485,10 +798,11 @@ export default function SetlistAdmin() {
 
         <div>
           <p className="text-xs uppercase tracking-widest text-[#f5f0e8]/40">
-            Morceaux au total
+            Morceaux chargés
           </p>
+
           <p className="text-2xl font-bold text-[#e8a820]">
-            {artists.reduce((total, artist) => total + artist.songs.length, 0)}
+            {totalSongs}
           </p>
         </div>
       </div>
