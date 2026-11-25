@@ -8,9 +8,8 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -98,14 +97,59 @@ export default function Login() {
               Mot de passe
             </label>
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#222] border border-[#e8a820]/30 p-3 text-white outline-none focus:border-[#e8a820]"
-              placeholder="Votre mot de passe"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#222] border border-[#e8a820]/30 p-3 pr-12 text-white outline-none focus:border-[#e8a820]"
+                placeholder="Votre mot de passe"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#e8a820]/60 hover:text-[#e8a820] transition-colors"
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                {showPassword ? (
+                  // Œil barré
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m3 3 18 18" />
+                    <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83" />
+                    <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c5 0 9 5 10 7-.55 1.1-1.5 2.5-2.8 3.7" />
+                    <path d="M6.61 6.61C4.62 7.83 3.3 9.54 2 12c1 2 5 7 10 7 1.15 0 2.23-.26 3.22-.7" />
+                  </svg>
+                ) : (
+                  // Œil ouvert
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (

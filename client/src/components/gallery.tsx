@@ -1,5 +1,7 @@
 
 import { useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+
 import FadeIn from "@/components/ui/FadeIn";
 import HexPattern from "@/components/ui/HexPattern";
 import GrungeOverlay from "@/components/ui/GrungeOverlay";
@@ -17,6 +19,13 @@ export default function GallerySection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Embla Carousel
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    slidesToScroll: 1,
+  });
+
   useEffect(() => {
     const fetchImages = async () => {
       try {
@@ -28,7 +37,6 @@ export default function GallerySection() {
 
         const data: GalleryImage[] = await response.json();
         setImages(data);
-
       } catch (err) {
         console.error(err);
 
@@ -37,7 +45,6 @@ export default function GallerySection() {
         } else {
           setError("Une erreur inconnue est survenue");
         }
-
       } finally {
         setLoading(false);
       }
@@ -90,9 +97,7 @@ export default function GallerySection() {
 
         {/* Error */}
         {error && (
-          <p className="text-center text-red-400">
-            {error}
-          </p>
+          <p className="text-center text-red-400">{error}</p>
         )}
 
         {/* Empty gallery */}
@@ -102,62 +107,83 @@ export default function GallerySection() {
           </p>
         )}
 
-        {/* Gallery grid */}
+        {/* Gallery carousel */}
         {!loading && !error && images.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-start">
+          <div className="relative">
 
-            {images.map((img, i) => (
-              <FadeIn key={img.id} delay={i * 0.1}>
-                <div
-                  className="group relative overflow-hidden"
-                  style={{
-                    aspectRatio:
-                      i % 4 === 1 ? "2/3" :
-                      i % 4 === 2 ? "1/1.4" : "1/1",
+            {/* Navigation */}
+            <div className="flex items-center justify-end gap-3 mb-6">
+              <button
+                onClick={() => emblaApi?.scrollPrev()}
+                className="w-11 h-11 border border-[#e8a820] text-[#e8a820]
+                hover:bg-[#e8a820] hover:text-black transition-all"
+                aria-label="Images précédentes"
+              >
+                ←
+              </button>
 
-                    clipPath:
-                      "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+              <button
+                onClick={() => emblaApi?.scrollNext()}
+                className="w-11 h-11 border border-[#e8a820] text-[#e8a820]
+                hover:bg-[#e8a820] hover:text-black transition-all"
+                aria-label="Images suivantes"
+              >
+                →
+              </button>
+            </div>
 
-                    marginTop:
-                      i % 4 === 1 ? "2rem" :
-                      i % 4 === 3 ? "-2rem" : "0",
-                  }}
-                >
-                  <img
-                    src={`${API_URL}${img.url}`}
-                    alt={img.title}
-                    loading="lazy"
-                    className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
-                  />
+            {/* Embla viewport */}
+            <div
+              className="overflow-hidden pb-6"
+              ref={emblaRef}
+            >
+              {/* Embla container */}
+              <div className="flex gap-4">
 
-                  {/* Dark gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#111]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  {/* Hex overlay on hover */}
+                {images.map((img, i) => (
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    key={img.id}
+                    className="group relative flex-none w-[85%]
+                    sm:w-[48%] lg:w-[32%] overflow-hidden"
                     style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='h' x='0' y='0' width='30' height='26' patternUnits='userSpaceOnUse'%3E%3Cpolygon points='15,1 29,8.5 29,23.5 15,31 1,23.5 1,8.5' fill='none' stroke='%23e8a820' strokeWidth='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23h)'/%3E%3C/svg%3E")`,
-                      opacity: 0.15,
+                      aspectRatio: i % 3 === 1 ? "2/3" : "1/1",
+                      clipPath:
+                        "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                     }}
-                  />
-
-                  {/* Image caption */}
-                  <div
-                    className="absolute bottom-3 left-3 text-[#e8a820] text-xs tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ fontFamily: "'Oswald', sans-serif" }}
                   >
-                    {img.title}
+                    <img
+                      src={`${API_URL}${img.url}`}
+                      alt={img.title}
+                      loading="lazy"
+                      className="w-full h-full object-contain
+                      transition-transform duration-700 group-hover:scale-110"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t
+                    from-[#111]/80 via-transparent to-transparent
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div
+                      className="absolute bottom-3 left-3 text-[#e8a820]
+                      text-xs tracking-widest uppercase opacity-0
+                      group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ fontFamily: "'Oswald', sans-serif" }}
+                    >
+                      {img.title}
+                    </div>
+
+                    <div className="absolute top-0 left-0 w-6 h-6
+                    border-t-2 border-l-2 border-[#e8a820] opacity-0
+                    group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="absolute bottom-0 right-0 w-6 h-6
+                    border-b-2 border-r-2 border-[#e8a820] opacity-0
+                    group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
+                ))}
 
-                  {/* Gold corner accents */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#e8a820] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#e8a820] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-              </FadeIn>
-            ))}
-
+              </div>
+            </div>
           </div>
         )}
       </div>

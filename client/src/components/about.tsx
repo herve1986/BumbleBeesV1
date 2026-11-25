@@ -133,7 +133,7 @@ export default function AboutSection() {
               <div className="flex gap-8">
                 {[
                   { num: "2023", label: "Fondé" },
-                  { num: "50+", label: "Concerts" },
+                  { num: "100%", label: "Concerts" },
                   { num: "100%", label: "Rock" },
                 ].map((stat) => (
                   <div
