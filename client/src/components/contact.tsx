@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-
+import emailjs from "@emailjs/browser";
 import FadeIn from "@/components/ui/FadeIn";
 import HexBadge from "@/components/ui/HexBadge";
 import HexPattern from "@/components/ui/HexPattern";
@@ -8,11 +8,49 @@ import GrungeOverlay from "@/components/ui/GrungeOverlay";
 
 export default function ContactSection() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
+
+    if (!formData.name || !formData.email || !formData.message) return;
+
+    setLoading(true);
+    setError(false);
+
+    try {
+      await emailjs.send(
+        "service_u2sk467",
+        "template_l9z8pnz",
+        {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        },
+        "QH7Z8VkOizuiuZY1r"
+      );
+
+      setSent(true);
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
+
+    } catch (err) {
+      console.error("Erreur envoi mail :", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -25,6 +63,7 @@ export default function ContactSection() {
       <GrungeOverlay opacity={0.025} />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Section header */}
         <FadeIn direction="right" className="mb-16 text-right">
           <div className="flex items-center justify-end gap-4 mb-4">
@@ -34,6 +73,7 @@ export default function ContactSection() {
             >
               ★ Nous contacter ★
             </p>
+
             <div className="w-12 h-px bg-[#e8a820]" />
           </div>
 
@@ -63,41 +103,35 @@ export default function ContactSection() {
         </FadeIn>
 
         <div className="grid md:grid-cols-2 gap-16">
+
           {/* Contact information */}
           <FadeIn direction="left">
             <div className="space-y-6">
-              {[
-                {
-                  icon: "✉",
-                  label: "Email",
-                  value: "contact@bumblebees-rock.fr",
-                }
-              ].map((item) => (
-                <div key={item.label} className="flex items-start gap-4">
-                  <HexBadge size={52}>
-                    <span className="text-lg">{item.icon}</span>
-                  </HexBadge>
 
-                  <div className="pt-2">
-                    <div
-                      className="text-[#e8a820] text-xs tracking-widest uppercase mb-1"
-                      style={{ fontFamily: "'Oswald', sans-serif" }}
-                    >
-                      {item.label}
-                    </div>
+              <div className="flex items-start gap-4">
+                <HexBadge size={52}>
+                  <span className="text-lg">✉</span>
+                </HexBadge>
 
-                    <div
-                      className="text-[#f5f0e8]/70 text-sm"
-                      style={{
-                        fontFamily: "'Oswald', sans-serif",
-                        fontWeight: 300,
-                      }}
-                    >
-                      {item.value}
-                    </div>
+                <div className="pt-2">
+                  <div
+                    className="text-[#e8a820] text-xs tracking-widest uppercase mb-1"
+                    style={{ fontFamily: "'Oswald', sans-serif" }}
+                  >
+                    Email
+                  </div>
+
+                  <div
+                    className="text-[#f5f0e8]/70 text-sm"
+                    style={{
+                      fontFamily: "'Oswald', sans-serif",
+                      fontWeight: 300,
+                    }}
+                  >
+                    les.bumblebees@gmail.com
                   </div>
                 </div>
-              ))}
+              </div>
 
               {/* Social links */}
               <div className="pt-6">
@@ -140,35 +174,75 @@ export default function ContactSection() {
 
           {/* Contact form */}
           <FadeIn delay={0.2} direction="right">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                {
-                  id: "name",
-                  label: "Nom",
-                  type: "text",
-                  placeholder: "Votre nom",
-                },
-                {
-                  id: "email",
-                  label: "Email",
-                  type: "email",
-                  placeholder: "votre@email.fr",
-                },
-              ].map((field) => (
-                <div key={field.id}>
+
+            {sent ? (
+              <div
+                className="p-10 text-center space-y-5"
+                style={{
+                  background: "rgba(17,17,17,0.8)",
+                  border: "1px solid rgba(232,168,32,0.25)",
+                }}
+              >
+                <div className="text-4xl text-[#e8a820]">
+                  ★
+                </div>
+
+                <h3
+                  className="text-2xl font-bold text-[#f5f0e8]"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Message envoyé !
+                </h3>
+
+                <p
+                  className="text-[#f5f0e8]/50 text-sm"
+                  style={{ fontFamily: "'Oswald', sans-serif" }}
+                >
+                  Merci pour votre message ! Nous vous répondrons très bientôt.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSent(false);
+                    setError(false);
+                  }}
+                  className="mt-4 px-6 py-3 text-xs tracking-widest uppercase transition-all hover:bg-[#e8a820]/15"
+                  style={{
+                    color: "#e8a820",
+                    border: "1px solid rgba(232,168,32,0.4)",
+                    fontFamily: "'Oswald', sans-serif",
+                  }}
+                >
+                  Envoyer un autre message →
+                </button>
+              </div>
+            ) : (
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+
+                {/* Name */}
+                <div>
                   <label
-                    htmlFor={field.id}
+                    htmlFor="name"
                     className="block text-[#e8a820] text-xs tracking-widest uppercase mb-2"
                     style={{ fontFamily: "'Oswald', sans-serif" }}
                   >
-                    {field.label}
+                    Nom
                   </label>
 
                   <input
-                    id={field.id}
-                    name={field.id}
-                    type={field.type}
-                    placeholder={field.placeholder}
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Votre nom"
                     required
                     className="w-full px-4 py-3 text-sm outline-none transition-all duration-200"
                     style={{
@@ -192,72 +266,142 @@ export default function ContactSection() {
                     }}
                   />
                 </div>
-              ))}
 
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-[#e8a820] text-xs tracking-widest uppercase mb-2"
-                  style={{ fontFamily: "'Oswald', sans-serif" }}
-                >
-                  Message
-                </label>
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-[#e8a820] text-xs tracking-widest uppercase mb-2"
+                    style={{ fontFamily: "'Oswald', sans-serif" }}
+                  >
+                    Email
+                  </label>
 
-                <textarea
-                  id="message"
-                  name="message"
-                  placeholder="Votre message..."
-                  rows={4}
-                  required
-                  className="w-full px-4 py-3 text-sm outline-none transition-all duration-200 resize-none"
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        email: e.target.value,
+                      })
+                    }
+                    placeholder="votre@email.fr"
+                    required
+                    className="w-full px-4 py-3 text-sm outline-none transition-all duration-200"
+                    style={{
+                      background: "rgba(17,17,17,0.8)",
+                      border: "1px solid rgba(232,168,32,0.18)",
+                      borderLeft: "3px solid rgba(232,168,32,0.4)",
+                      color: "#f5f0e8",
+                      fontFamily: "'Oswald', sans-serif",
+                      fontWeight: 300,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(232,168,32,0.6)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 0 2px rgba(232,168,32,0.08)";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(232,168,32,0.18)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-[#e8a820] text-xs tracking-widest uppercase mb-2"
+                    style={{ fontFamily: "'Oswald', sans-serif" }}
+                  >
+                    Message
+                  </label>
+
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        message: e.target.value,
+                      })
+                    }
+                    placeholder="Votre message..."
+                    rows={4}
+                    required
+                    className="w-full px-4 py-3 text-sm outline-none transition-all duration-200 resize-none"
+                    style={{
+                      background: "rgba(17,17,17,0.8)",
+                      border: "1px solid rgba(232,168,32,0.18)",
+                      borderLeft: "3px solid rgba(232,168,32,0.4)",
+                      color: "#f5f0e8",
+                      fontFamily: "'Oswald', sans-serif",
+                      fontWeight: 300,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(232,168,32,0.6)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 0 2px rgba(232,168,32,0.08)";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(232,168,32,0.18)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <p
+                    className="text-red-400 text-sm"
+                    style={{ fontFamily: "'Oswald', sans-serif" }}
+                  >
+                    Une erreur est survenue lors de l'envoi.
+                    Veuillez réessayer.
+                  </p>
+                )}
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 font-bold tracking-widest uppercase text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    background: "rgba(17,17,17,0.8)",
-                    border: "1px solid rgba(232,168,32,0.18)",
-                    borderLeft: "3px solid rgba(232,168,32,0.4)",
-                    color: "#f5f0e8",
+                    background: loading ? "#c0392b" : "#e8a820",
+                    color: "#111",
                     fontFamily: "'Oswald', sans-serif",
-                    fontWeight: 300,
+                    clipPath:
+                      "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
                   }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(232,168,32,0.6)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 2px rgba(232,168,32,0.08)";
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = "#f5c842";
+                      e.currentTarget.style.transform = "scale(1.02)";
+                    }
                   }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(232,168,32,0.18)";
-                    e.currentTarget.style.boxShadow = "none";
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = "#e8a820";
+                      e.currentTarget.style.transform = "scale(1)";
+                    }
                   }}
-                />
-              </div>
+                >
+                  {loading
+                    ? "Envoi en cours..."
+                    : "Envoyer le message →"}
+                </button>
 
-              <button
-                type="submit"
-                className="w-full py-4 font-bold tracking-widest uppercase text-sm transition-all duration-200"
-                style={{
-                  background: sent ? "#c0392b" : "#e8a820",
-                  color: "#111",
-                  fontFamily: "'Oswald', sans-serif",
-                  clipPath:
-                    "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!sent) {
-                    e.currentTarget.style.background = "#f5c842";
-                    e.currentTarget.style.transform = "scale(1.02)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!sent) {
-                    e.currentTarget.style.background = "#e8a820";
-                    e.currentTarget.style.transform = "scale(1)";
-                  }
-                }}
-              >
-                {sent ? "★ Message envoyé ! ★" : "Envoyer le message →"}
-              </button>
-            </form>
+              </form>
+            )}
           </FadeIn>
         </div>
       </div>
