@@ -1,17 +1,6 @@
-
+import { authFetch } from "@/lib/api";
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Save,
-  CalendarDays,
-  MapPin,
-  Clock,
-} from "lucide-react";
-
-const API_URL = "http://127.0.0.1:8000";
+import {Plus,Pencil,Trash2,X,Save,CalendarDays,MapPin,Clock,} from "lucide-react";
 
 interface Concert {
   id: number;
@@ -39,7 +28,7 @@ export default function ConcertAdmin() {
     try {
       setError(null);
 
-      const response = await fetch(`${API_URL}/concerts/`);
+      const response = await authFetch("/concerts/");
 
       if (!response.ok) {
         throw new Error("Impossible de récupérer les concerts.");
@@ -47,7 +36,6 @@ export default function ConcertAdmin() {
 
       const data: Concert[] = await response.json();
       setConcerts(data);
-
     } catch (err) {
       console.error(err);
       setError(
@@ -97,17 +85,13 @@ export default function ConcertAdmin() {
 
       const isEditing = editingId !== null;
 
-      const url = isEditing
-        ? `${API_URL}/concerts/${editingId}`
-        : `${API_URL}/concerts/`;
-
-      const response = await fetch(url, {
-        method: isEditing ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(concertData),
-      });
+      const response = await authFetch(
+        isEditing ? `/concerts/${editingId}` : "/concerts/",
+        {
+          method: isEditing ? "PUT" : "POST",
+          body: JSON.stringify(concertData),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -115,8 +99,6 @@ export default function ConcertAdmin() {
           errorData.detail || "Erreur lors de l'enregistrement."
         );
       }
-
-      await response.json();
 
       setSuccess(
         isEditing
@@ -126,7 +108,6 @@ export default function ConcertAdmin() {
 
       resetForm();
       await fetchConcerts();
-
     } catch (err) {
       console.error(err);
       setError(
@@ -161,7 +142,7 @@ export default function ConcertAdmin() {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`${API_URL}/concerts/${id}`, {
+      const response = await authFetch(`/concerts/${id}`, {
         method: "DELETE",
       });
 
@@ -175,7 +156,6 @@ export default function ConcertAdmin() {
       setSuccess("Concert supprimé avec succès !");
 
       await fetchConcerts();
-
     } catch (err) {
       console.error(err);
       setError(

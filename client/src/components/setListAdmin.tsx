@@ -1,18 +1,6 @@
-
+import { authFetch } from "@/lib/api";
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Save,
-  Music,
-  Disc3,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-
-const API_URL = "http://127.0.0.1:8000";
+import {Plus,Pencil,Trash2,X,Save,Music,Disc3,ChevronDown,ChevronUp,} from "lucide-react";
 
 interface Song {
   id: number;
@@ -58,7 +46,7 @@ export default function SetlistAdmin() {
     try {
       setError(null);
 
-      const response = await fetch(`${API_URL}/groups/`);
+      const response = await authFetch("/groups/");
 
       if (!response.ok) {
         throw new Error("Impossible de récupérer les groupes.");
@@ -96,9 +84,7 @@ export default function SetlistAdmin() {
   // Chargement des morceaux d'un groupe
   const fetchSongs = async (groupId: number) => {
     try {
-      const response = await fetch(
-        `${API_URL}/musics/group/${groupId}`
-      );
+      const response = await authFetch(`/musics/group/${groupId}`);
 
       if (!response.ok) {
         throw new Error("Impossible de récupérer les morceaux.");
@@ -178,17 +164,15 @@ export default function SetlistAdmin() {
 
       const isEditing = editingGroupId !== null;
 
-      const url = isEditing
-        ? `${API_URL}/groups/${editingGroupId}`
-        : `${API_URL}/groups/`;
-
-      const response = await fetch(url, {
-        method: isEditing ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name }),
-      });
+      const response = await authFetch(
+        isEditing
+          ? `/groups/${editingGroupId}`
+          : "/groups/",
+        {
+          method: isEditing ? "PUT" : "POST",
+          body: JSON.stringify({ name }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -270,7 +254,7 @@ export default function SetlistAdmin() {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(`${API_URL}/groups/${id}`, {
+      const response = await authFetch(`/groups/${id}`, {
         method: "DELETE",
       });
 
@@ -326,21 +310,19 @@ export default function SetlistAdmin() {
       setSuccess(null);
 
       const isEditing = editingSongId !== null;
-
-      const url = isEditing
-        ? `${API_URL}/musics/${editingSongId}`
-        : `${API_URL}/musics/`;
-
-      const response = await fetch(url, {
-        method: isEditing ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          group_id: songFormGroupId,
-        }),
-      });
+      
+      const response = await authFetch(
+        isEditing
+          ? `/musics/${editingSongId}`
+          : "/musics/",
+        {
+          method: isEditing ? "PUT" : "POST",
+          body: JSON.stringify({
+            title,
+            group_id: songFormGroupId,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -394,12 +376,9 @@ export default function SetlistAdmin() {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(
-        `${API_URL}/musics/${songId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await authFetch(`/musics/${songId}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);

@@ -1,14 +1,6 @@
-
+import { authFetch } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
-import {
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  Upload,
-  X,
-  Pencil,
-  Check,
-} from "lucide-react";
+import {Plus,Trash2,Image as ImageIcon,Upload,X,Pencil,Check,} from "lucide-react";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -35,32 +27,32 @@ export default function GalleryAdmin() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Récupérer les images depuis le backend
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const fetchImages = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(`${API_URL}/images/`);
+      const response = await authFetch("/images/");
 
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer les images.");
-        }
-
-        const data: GroupImage[] = await response.json();
-
-        setImages(data);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Une erreur est survenue."
-        );
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Impossible de récupérer les images.");
       }
-    };
 
+      const data: GroupImage[] = await response.json();
+
+      setImages(data);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchImages();
   }, []);
 
@@ -106,7 +98,7 @@ export default function GalleryAdmin() {
           formData.append("title", file.name);
           formData.append("file", file);
 
-          const response = await fetch(`${API_URL}/images/`, {
+          const response = await authFetch("/images/", {
             method: "POST",
             body: formData,
           });
@@ -185,7 +177,7 @@ export default function GalleryAdmin() {
 
       formData.append("title", title);
 
-      const response = await fetch(`${API_URL}/images/${id}`, {
+      const response = await authFetch(`/images/${id}`, {
         method: "PUT",
         body: formData,
       });
@@ -236,7 +228,7 @@ export default function GalleryAdmin() {
     setDeletingId(id);
 
     try {
-      const response = await fetch(`${API_URL}/images/${id}`, {
+      const response = await authFetch(`/images/${id}`, {
         method: "DELETE",
       });
 
@@ -281,7 +273,7 @@ export default function GalleryAdmin() {
             Gestion des images
           </h2>
 
-          <p className="text-m text-[#f5f0e8]/50 mt-1">
+          <p className="text-sm text-[#f5f0e8]/50 mt-1">
             Gérez les photos de votre groupe et de vos concerts.
           </p>
         </div>

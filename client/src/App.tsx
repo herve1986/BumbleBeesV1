@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -7,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Admin from "./pages/admin";
+import Login from "./pages/login";
 
 function Router() {
   return (
@@ -14,8 +14,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
-
-      {/* Final fallback route */}
+      <Route path="/login" component={Login} />
       <Route component={NotFound} />
     </Switch>
   );

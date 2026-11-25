@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import ConcertAdmin from "@/components/concertAdmin";
@@ -10,6 +10,26 @@ type AdminTab = "concerts" | "setlist" | "gallery";
 
 function Admin() {
   const [activeTab, setActiveTab] = useState<AdminTab>("concerts");
+  const [, setLocation] = useLocation();
+  const [authorized, setAuthorized] = useState(false);
+
+  // Vérification de la connexion
+  useEffect(() => {
+  const token = sessionStorage.getItem("access_token");
+
+    if (!token) {
+      setLocation("/login");
+    } else {
+      setAuthorized(true);
+    }
+  }, [setLocation]);
+
+  // Déconnexion
+  const handleLogout = () => {
+    sessionStorage.removeItem("access_token");
+    setAuthorized(false);
+    setLocation("/login");
+  };
 
   const tabs = [
     {
@@ -32,6 +52,15 @@ function Admin() {
     },
   ];
 
+  // Ne pas afficher l'administration avant vérification
+  if (!authorized) {
+    return (
+      <div className="min-h-screen bg-[#171717] flex items-center justify-center">
+        <p className="text-[#e8a820]">Vérification de l'accès...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -40,18 +69,28 @@ function Admin() {
         <div className="max-w-7xl mx-auto">
 
           {/* En-tête */}
-          <div className="mb-10">
-            <p className="text-sm uppercase tracking-[0.3em] text-[#e8a820] mb-2">
-              BumbleBees
-            </p>
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-[#e8a820] mb-2">
+                BumbleBees
+              </p>
 
-            <h1 className="text-4xl font-bold text-white">
-              Administration
-            </h1>
+              <h1 className="text-4xl font-bold text-white">
+                Administration
+              </h1>
 
-            <p className="text-gray-400 mt-2">
-              Gérez le contenu de votre site depuis cet espace.
-            </p>
+              <p className="text-gray-400 mt-2">
+                Gérez le contenu de votre site depuis cet espace.
+              </p>
+            </div>
+
+            {/* Déconnexion */}
+            <button
+              onClick={handleLogout}
+              className="px-5 py-3 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all"
+            >
+              ↪ Déconnexion
+            </button>
           </div>
 
           {/* Navigation */}
@@ -98,7 +137,7 @@ function Admin() {
             })}
           </div>
 
-          {/* Contenu de la section sélectionnée */}
+          {/* Contenu */}
           <div className="bg-[#202020] border border-white/10 rounded-2xl p-4 sm:p-8 shadow-xl">
             {activeTab === "concerts" && <ConcertAdmin />}
             {activeTab === "setlist" && <SetlistAdmin />}
