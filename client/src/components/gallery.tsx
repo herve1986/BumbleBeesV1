@@ -152,7 +152,7 @@ export default function GallerySection() {
                     }}
                   >
                     <img
-                      src={`${API_URL}${img.url}`}
+                      src={img.url}
                       alt={img.title}
                       loading="lazy"
                       className="w-full h-full object-contain

@@ -381,7 +381,7 @@ export default function GalleryAdmin() {
                 {/* Image */}
                 <div className="aspect-square">
                   <img
-                    src={`${API_URL}${image.url}`}
+                    src={image.url}
                     alt={image.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
