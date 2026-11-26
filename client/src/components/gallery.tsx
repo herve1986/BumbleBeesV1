@@ -1,7 +1,5 @@
-
 import { useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-
 import FadeIn from "@/components/ui/FadeIn";
 import HexPattern from "@/components/ui/HexPattern";
 import GrungeOverlay from "@/components/ui/GrungeOverlay";
@@ -12,7 +10,7 @@ interface GalleryImage {
   url: string;
 }
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function GallerySection() {
   const [images, setImages] = useState<GalleryImage[]>([]);

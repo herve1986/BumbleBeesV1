@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import Navbar from "@/components/layout/navbar";
+import { API_URL } from "@/const";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -15,7 +16,7 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

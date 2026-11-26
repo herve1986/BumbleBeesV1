@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import FadeIn from "@/components/ui/FadeIn"; // Ajoute une animation d'apparition
 import HexPattern from "@/components/ui/HexPattern"; // Affiche un motif hexagonal en arrière-plan
 import GrungeOverlay from "@/components/ui/GrungeOverlay"; // Ajoute une texture vieillie / grunge
+import { API_URL } from "@/const";
 
 interface Concert {
   id: number;
@@ -20,7 +21,7 @@ export default function ConcertsSection() {
   useEffect(() => {
   const fetchConcerts = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/concerts/");
+      const response = await fetch(`${API_URL}/concerts/`);
 
       if (!response.ok) {
         throw new Error("Erreur lors de la récupération des concerts");

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import HexPattern from "@/components/ui/HexPattern";
 import GrungeOverlay from "@/components/ui/GrungeOverlay";
+import { API_URL } from "@/const";
 
 interface Group {
   id: number;
@@ -33,7 +34,7 @@ export default function SetlistSection() {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/groups/");
+        const response = await fetch(`${API_URL}/groups/`);
 
         if (!response.ok) {
           throw new Error("Erreur lors de la récupération des groupes");
@@ -74,7 +75,7 @@ export default function SetlistSection() {
         setMusics([]);
 
         const response = await fetch(
-          `http://127.0.0.1:8000/musics/group/${selectedGroupId}`,
+          `${API_URL}/musics/group/${selectedGroupId}`,
           { signal: controller.signal }
         );
 
