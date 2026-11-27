@@ -47,7 +47,7 @@ export default function AboutSection() {
               </svg>
 
               <img
-                src="/public/images/img1.jpg"
+                src="/images/img1.jpg"
                 alt="Bumblebees en concert"
                 className="w-full object-cover relative z-10"
                 style={{

@@ -74,7 +74,7 @@ export default function HeroSection() {
             >
               <div className="mt-5 relative flex items-center justify-center w-40 h-40 md:w-56 md:h-56">
                 <img
-                  src="/public/images/logo.jpg"
+                  src="/images/logo.jpg"
                   alt="Bumblebees Logo"
                   className="w-full h-full rounded-full object-cover"
                   style={{
