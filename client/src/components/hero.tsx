@@ -101,7 +101,7 @@ export default function HeroSection() {
     
             {/* Animated title */}
             <h1
-              className="text-6xl md:text-8xl lg:text-9xl font-black mb-4 leading-none"
+              className="text-4xl sm:text-5xl md:text-8xl lg:text-9xl font-black mb-4 leading-none"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 color: "#e8a820",

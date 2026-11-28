@@ -8,15 +8,20 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useLocation();
 
+  const scrollToSection = (href: string) => {
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const navigateToSection = (href: string) => {
     setMenuOpen(false);
 
     if (location !== "/") {
-      setLocation("/" + href);
+      setLocation("/");
+      // laisser la page d'accueil se monter avant de scroller
+      setTimeout(() => scrollToSection(href), 150);
     } else {
-      document.querySelector(href)?.scrollIntoView({
-        behavior: "smooth",
-      });
+      // laisser le menu mobile finir de se fermer
+      setTimeout(() => scrollToSection(href), 300);
     }
   };
 
@@ -83,7 +88,7 @@ export default function Navbar() {
             />
           </div>
 
-          <div className="hidden sm:block">
+          <div className="hidden lg:block">
             <div
               className="text-[#e8a820] font-bold leading-none"
               style={{
@@ -145,7 +150,7 @@ export default function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden flex flex-col gap-1.5 p-2"
+          className="md:hidden flex flex-col gap-1.5 p-2  ml-auto"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Menu"
           aria-expanded={menuOpen}
